@@ -220,7 +220,7 @@ up echo nameserver 192.168.122.1 >> /etc/resolv.conf
 
 Pulau Paradis telah menjadi tempat yang damai selama 1000 tahun, namun kedamaian tersebut tidak bertahan selamanya. Perang antara kaum Marley dan Eldia telah mencapai puncak. Kaum Marley yang dipimpin oleh Zeke, me-register domain name marley.yyy.com untuk worker Laravel mengarah pada Annie. Namun ternyata tidak hanya kaum Marley saja yang berinisiasi, kaum Eldia ternyata sudah mendaftarkan domain name eldia.yyy.com untuk worker PHP (0) mengarah pada Armin.
 
-- pertama agar lebih mudah kita dapat membuat script untuk memasang konfigurasi nantinya, pada DNS Server kita namakan script dengan file `fritz.sh` :
+- pertama agar lebih mudah kita dapat membuat script untuk memasang konfigurasi nantinya, pada DNS Server kita namakan script dengan file `config-fritz.sh` :
 
 ```bash
 echo 'zone "marley.it31.com" {
@@ -304,7 +304,7 @@ apt-get update
 apt-get install isc-dhcp-relay -y
 service isc-dhcp-relay start
 
-relay="SERVERS=\"192.232.4.3\"
+relay="SERVERS=\"192.232.4.2\"
 INTERFACES=\"eth1 eth2 eth3 eth4\"
 OPTIONS=\"\"
 "
@@ -341,23 +341,23 @@ Client yang melalui bangsa eldia mendapatkan range IP dari [prefix IP].2.09 - [p
 - setelah tadi setup subnet dari `marley` maka sekarang kita setup subnet untuk `eldia`. kita dapat menambahkan pada script `subnet.sh`
 
 ```bash
-echo 'subnet 192.232.3.1 netmask 255.255.255.0 {
+echo 'subnet 192.232.3.0 netmask 255.255.255.0 {
     option routers 192.232.3.1;
 }
 
-subnet 192.232.4.1 netmask 255.255.255.0 {
+subnet 192.232.4.0 netmask 255.255.255.0 {
     option routers 192.232.4.1;
 }
 
-subnet 192.232.1.1 netmask 255.255.255.0 {
+subnet 192.232.1.0 netmask 255.255.255.0 {
     range 192.232.1.5 192.232.1.25;
     range 192.232.1.50 192.232.1.100;
     option routers 192.232.1.2;
 }
 
-subnet 192.232.2.1 netmask 255.255.255.0 {
+subnet 192.232.2.0 netmask 255.255.255.0 {
     range 192.232.2.09 192.232.2.27;
-    range 192.232.2.81 192.232.1.243;
+    range 192.232.2.81 192.232.2.243;
     option routers 192.232.2.4;
 }' >/etc/dhcp/dhcpd.conf
 
@@ -370,17 +370,17 @@ Client mendapatkan DNS dari keluarga Fritz dan dapat terhubung dengan internet m
 - lalu setelah setup subnet pada marley dan eldia pada file `subnet.sh` sebelumnya, maka kita selanjutnya dapat setup untuk `option-domain-name-servers`
 
 ```bash
-echo 'subnet 192.232.3.1 netmask 255.255.255.0 {
+echo 'subnet 192.232.3.0 netmask 255.255.255.0 {
     option routers 192.232.3.1;
     option broadcast-address 192.232.3.255;
 }
 
-subnet 192.232.4.1 netmask 255.255.255.0 {
+subnet 192.232.4.0 netmask 255.255.255.0 {
     option routers 192.232.4.1;
     option broadcast-address 192.232.4.255;
 }
 
-subnet 192.232.1.1 netmask 255.255.255.0 {
+subnet 192.232.1.0 netmask 255.255.255.0 {
     range 192.232.1.5 192.232.1.25;
     range 192.232.1.50 192.232.1.100;
     option routers 192.232.1.2;
@@ -388,13 +388,14 @@ subnet 192.232.1.1 netmask 255.255.255.0 {
     option domain-name-servers 192.232.4.3;
 }
 
-subnet 192.232.2.1 netmask 255.255.255.0 {
+subnet 192.232.2.0 netmask 255.255.255.0 {
     range 192.232.2.09 192.232.2.27;
-    range 192.232.2.81 192.232.1.243;
+    range 192.232.2.81 192.232.2.243;
     option routers 192.232.2.4;
     option broadcast-address 192.232.2.255;
     option domain-name-servers 192.232.4.3;
 }' >/etc/dhcp/dhcpd.conf
+
 
 ```
 
@@ -424,20 +425,19 @@ Dikarenakan keluarga Tybur tidak menyukai kaum eldia, maka mereka hanya meminjam
 ```bash
 echo INTERFACESv4="eth0" >/etc/default/isc-dhcp-server
 
-echo authoritative;
+echo 'authoritative;
 
-subnet 192.232.3.1 netmask 255.255.255.0 {
+subnet 192.232.3.0 netmask 255.255.255.0 {
     option routers 192.232.3.1;
     option broadcast-address 192.232.3.255;
 }
 
-
-subnet 192.232.4.1 netmask 255.255.255.0 {
+subnet 192.232.4.0 netmask 255.255.255.0 {
     option routers 192.232.4.1;
     option broadcast-address 192.232.4.255;
 }
 
-subnet 192.232.1.1 netmask 255.255.255.0 {
+subnet 192.232.1.0 netmask 255.255.255.0 {
     range 192.232.1.5 192.232.1.25;
     range 192.232.1.50 192.232.1.100;
     option routers 192.232.1.2;
@@ -447,9 +447,9 @@ subnet 192.232.1.1 netmask 255.255.255.0 {
     max-lease-time 5220;
 }
 
-subnet 192.232.2.1 netmask 255.255.255.0 {
+subnet 192.232.2.0 netmask 255.255.255.0 {
     range 192.232.2.09 192.232.2.27;
-    range 192.232.2.81 192.232.1.243;
+    range 192.232.2.81 192.232.2.243;
     option routers 192.232.2.4;
     option broadcast-address 192.232.2.255;
     option domain-name-servers 192.232.4.3;
@@ -468,3 +468,7 @@ bash limit.sh
 ```
 
 - lalu tes telnet pada client `Erwin` dan `Zeke` , akan tetapi sebelumnya node kedua client tersebut dapat dimatikan, lalu di nyalakan kembali.
+
+![alt text](/img/zeke-dhcp.png)
+
+![alt text](/img/erwin-dhcp.png)
