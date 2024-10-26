@@ -12,11 +12,12 @@
 - [Topology](#topology)
 - [Configuration](#configuration)
 - [Installation](#installation)
-- [Nomor 1](#nomor-1)
-- [Nomor 2](#nomor-2)
-- [Nomor 3](#nomor-3)
-- [Nomor 4](#nomor-4)
-- [Nomor 5](#nomor-5)
+- [Soal 1](#soal-1)
+- [Soal 2](#soal-2)
+- [Soal 3](#soal-3)
+- [Soal 4](#soal-4)
+- [Soal 5](#soal-5)
+- [Soal 6](#soal-6)
 
 ## Topology
 
@@ -216,7 +217,18 @@ up echo nameserver 192.168.122.1 >> /etc/resolv.conf
 
 ## Installation
 
-## Nomor 1
+```bash
+echo nameserver 192.168.122.1 > /etc/resolv.conf
+apt-get update
+apt-get install isc-dhcp-server -y
+dhcpd --version
+
+echo INTERFACES="eth0" > /etc/default/isc-dhcp-serverm
+```
+
+-
+
+## Soal 1
 
 Pulau Paradis telah menjadi tempat yang damai selama 1000 tahun, namun kedamaian tersebut tidak bertahan selamanya. Perang antara kaum Marley dan Eldia telah mencapai puncak. Kaum Marley yang dipimpin oleh Zeke, me-register domain name marley.yyy.com untuk worker Laravel mengarah pada Annie. Namun ternyata tidak hanya kaum Marley saja yang berinisiasi, kaum Eldia ternyata sudah mendaftarkan domain name eldia.yyy.com untuk worker PHP (0) mengarah pada Armin.
 
@@ -289,7 +301,7 @@ service bind9 restart
 
 ![alt text](image-1.png)
 
-## Nomor 2
+## Soal 2
 
 Jauh sebelum perang dimulai, ternyata para keluarga bangsawan, Tybur dan Fritz, telah membuat kesepakatan sebagai berikut:
 
@@ -316,25 +328,31 @@ service isc-dhcp-relay restart
 
 ```
 
-- setalah script diatas dijalankan, kita dapat masuk ke Tybur (DHCP Server) dan membuat script `subnet.sh` untuk setup subnet marley
+- lalu jalankan `paradis.sh`
 
+```bash
+bash paradis.sh
 ```
-echo 'subnet 192.232.3.1 netmask 255.255.255.0 {
+
+- setalah script diatas dijalankan, kita dapat masuk ke Tybur (DHCP Server) dan membuat script `subnet.sh` untuk setup subnet marley, sebelumnya bisa diingat bahwa subnet selalu berakhiran `[ip].0`
+
+```bash
+echo 'subnet 192.232.3.0 netmask 255.255.255.0 {
     option routers 192.232.3.1;
 }
 
-subnet 192.232.4.1 netmask 255.255.255.0 {
+subnet 192.232.4.0 netmask 255.255.255.0 {
     option routers 192.232.4.1;
 }
 
-subnet 192.232.1.1 netmask 255.255.255.0 {
+subnet 192.232.1.0 netmask 255.255.255.0 {
     range 192.232.1.5 192.232.1.25;
     range 192.232.1.50 192.232.1.100;
     option routers 192.232.1.2;
 }' > /etc/dhcp/dhcpd.conf
 ```
 
-## Nomor 3
+## Soal 3
 
 Client yang melalui bangsa eldia mendapatkan range IP dari [prefix IP].2.09 - [prefix IP].2.27 dan [prefix IP].2 .81 - [prefix IP].2.243
 
@@ -363,7 +381,7 @@ subnet 192.232.2.0 netmask 255.255.255.0 {
 
 ```
 
-## Nomor 4
+## Soal 4
 
 Client mendapatkan DNS dari keluarga Fritz dan dapat terhubung dengan internet melalui DNS tersebut
 
@@ -416,7 +434,7 @@ echo 'options {
 }; ' >/etc/bind/named.conf.options
 ```
 
-## Nomor 5
+## Soal 5
 
 Dikarenakan keluarga Tybur tidak menyukai kaum eldia, maka mereka hanya meminjamkan ip address ke kaum eldia selama 6 menit. Namun untuk kaum marley, keluarga Tybur meminjamkan ip address selama 30 menit. Waktu maksimal dialokasikan untuk peminjaman alamat IP selama 87 menit.
 
@@ -472,3 +490,84 @@ bash limit.sh
 ![alt text](/img/zeke-dhcp.png)
 
 ![alt text](/img/erwin-dhcp.png)
+
+## Soal 6
+
+Armin berinisiasi untuk memerintahkan setiap worker PHP untuk melakukan konfigurasi virtual host untuk website berikut https://intip.in/BangsaEldia dengan menggunakan php 7.3
+
+- agar lebih mudah kita dapat membuat script dengan nama `php-worker.sh
+` untuk menginstall PHP pada `Armin` (PHP Worker)
+
+```sh
+#!/bin/bash
+
+# Tambahkan nameserver
+echo nameserver 192.232.2.4 >>/etc/resolv.conf
+apt-get update
+apt-get install nginx -y
+apt-get install lynx -y
+apt-get install php php-fpm -y
+apt-get install wget -y
+apt-get install unzip -y
+service nginx start
+service php7.3-fpm start
+
+wget -O '/var/www/eldia.it31.com' 'https://drive.google.com/uc?export=download&id=1ufulgiWyTbOXQcow11JkXG7safgLq1y-'
+unzip -o /var/www/eldia.it31.com -d /var/www/
+rm /var/www/eldia.it31.com
+mv /var/www/modul-3 /var/www/eldia.it31.com
+
+cp /etc/nginx/sites-available/default /etc/nginx/sites-available/eldia.it31.com
+ln -s /etc/nginx/sites-available/eldia.it31.com /etc/nginx/sites-enabled/
+rm /etc/nginx/sites-enabled/default
+
+echo 'server {
+     listen 80;
+     server_name _;
+
+     root /var/www/eldia.it31.com;
+     index index.php index.html index.htm;
+
+     location / {
+         try_files $uri $uri/ /index.php?$query_string;
+     }
+
+     location ~ \.php$ {
+         include snippets/fastcgi-php.conf;
+         fastcgi_pass unix:/run/php/php7.3-fpm.sock;
+         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+         include fastcgi_params;
+     }
+ }' >/etc/nginx/sites-available/eldia.it31.com
+
+service nginx restart
+
+```
+
+- lalu setelah itu jalankan `php-worker-armin`
+
+```sh
+bash php-worker-armin
+```
+
+- setelah itu kita beralih ke client, kemudian agar bisa menampilkan php nya kita dapat menginstall `lynx` terlebh dahulu pada client
+
+```sh
+apt install lynx
+```
+
+- lalu kita dapat lakukan test lynx pada localhost
+
+```sh
+lynx localhost
+```
+
+![alt text](/img/lynx-localhost.png)
+
+- kemudian bisa juga test lynx pada client dengan command :
+
+```sh
+lynx http://eldia.it31.com
+```
+
+![alt text](/img/lynx-zeke.png)
