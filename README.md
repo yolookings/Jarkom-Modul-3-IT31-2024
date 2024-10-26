@@ -16,6 +16,7 @@
 - [Nomor 2](#nomor-2)
 - [Nomor 3](#nomor-3)
 - [Nomor 4](#nomor-4)
+- [Nomor 5](#nomor-5)
 
 ## Topology
 
@@ -315,7 +316,7 @@ service isc-dhcp-relay restart
 
 ```
 
-- setalah script diatas dijalankan, kita dapat masuk ke Tybur (DHCP Server) dan membuat script `marley.sh` untuk setup subnet marley
+- setalah script diatas dijalankan, kita dapat masuk ke Tybur (DHCP Server) dan membuat script `subnet.sh` untuk setup subnet marley
 
 ```
 echo 'subnet 192.232.3.1 netmask 255.255.255.0 {
@@ -335,9 +336,9 @@ subnet 192.232.1.1 netmask 255.255.255.0 {
 
 ## Nomor 3
 
-Client yang melalui bangsa eldia mendapatkan range IP dari [prefix IP].2.09 - [prefix IP].2.27 dan [prefix IP].2 .81 - [prefix IP].2.243 (3)
+Client yang melalui bangsa eldia mendapatkan range IP dari [prefix IP].2.09 - [prefix IP].2.27 dan [prefix IP].2 .81 - [prefix IP].2.243
 
-- setelah tadi setup subnet dari `marley` maka sekarang kita setup subnet untuk `eldia`. kita dapat membuat script `eldia.sh`
+- setelah tadi setup subnet dari `marley` maka sekarang kita setup subnet untuk `eldia`. kita dapat menambahkan pada script `subnet.sh`
 
 ```bash
 echo 'subnet 192.232.3.1 netmask 255.255.255.0 {
@@ -363,3 +364,107 @@ subnet 192.232.2.1 netmask 255.255.255.0 {
 ```
 
 ## Nomor 4
+
+Client mendapatkan DNS dari keluarga Fritz dan dapat terhubung dengan internet melalui DNS tersebut
+
+- lalu setelah setup subnet pada marley dan eldia pada file `subnet.sh` sebelumnya, maka kita selanjutnya dapat setup untuk `option-domain-name-servers`
+
+```bash
+echo 'subnet 192.232.3.1 netmask 255.255.255.0 {
+    option routers 192.232.3.1;
+    option broadcast-address 192.232.3.255;
+}
+
+subnet 192.232.4.1 netmask 255.255.255.0 {
+    option routers 192.232.4.1;
+    option broadcast-address 192.232.4.255;
+}
+
+subnet 192.232.1.1 netmask 255.255.255.0 {
+    range 192.232.1.5 192.232.1.25;
+    range 192.232.1.50 192.232.1.100;
+    option routers 192.232.1.2;
+    option broadcast-address 192.232.1.255;
+    option domain-name-servers 192.232.4.3;
+}
+
+subnet 192.232.2.1 netmask 255.255.255.0 {
+    range 192.232.2.09 192.232.2.27;
+    range 192.232.2.81 192.232.1.243;
+    option routers 192.232.2.4;
+    option broadcast-address 192.232.2.255;
+    option domain-name-servers 192.232.4.3;
+}' >/etc/dhcp/dhcpd.conf
+
+```
+
+- lalu setup option pada fritz (DNS Server) pada script `fritz.sh`
+
+```bash
+echo 'options {
+        directory "/var/cache/bind";
+
+        forwarders {
+                192.168.122.1;
+        };
+
+        // dnssec-validation auto;
+        allow-query{any;};
+        auth-nxdomain no;    # conform to RFC1035
+        listen-on-v6 { any; };
+}; ' >/etc/bind/named.conf.options
+```
+
+## Nomor 5
+
+Dikarenakan keluarga Tybur tidak menyukai kaum eldia, maka mereka hanya meminjamkan ip address ke kaum eldia selama 6 menit. Namun untuk kaum marley, keluarga Tybur meminjamkan ip address selama 30 menit. Waktu maksimal dialokasikan untuk peminjaman alamat IP selama 87 menit.
+
+- untuk menambahkan waktu limit, kita dapat menambahkan limit pada script sebelumnya, agar lebih mudah kita dapat membuat script untuk limit itu sendiri bernama `limit.sh` :
+
+```bash
+echo INTERFACESv4="eth0" >/etc/default/isc-dhcp-server
+
+echo authoritative;
+
+subnet 192.232.3.1 netmask 255.255.255.0 {
+    option routers 192.232.3.1;
+    option broadcast-address 192.232.3.255;
+}
+
+
+subnet 192.232.4.1 netmask 255.255.255.0 {
+    option routers 192.232.4.1;
+    option broadcast-address 192.232.4.255;
+}
+
+subnet 192.232.1.1 netmask 255.255.255.0 {
+    range 192.232.1.5 192.232.1.25;
+    range 192.232.1.50 192.232.1.100;
+    option routers 192.232.1.2;
+    option broadcast-address 192.232.1.255;
+    option domain-name-servers 192.232.4.3;
+    default-lease-time 1800; // limit marley
+    max-lease-time 5220;
+}
+
+subnet 192.232.2.1 netmask 255.255.255.0 {
+    range 192.232.2.09 192.232.2.27;
+    range 192.232.2.81 192.232.1.243;
+    option routers 192.232.2.4;
+    option broadcast-address 192.232.2.255;
+    option domain-name-servers 192.232.4.3;
+    default-lease-time 360; // limit eldia
+    max-lease-time 5220;
+}' >/etc/dhcp/dhcpd.conf
+
+service isc-dhcp-server restart
+
+```
+
+- kemudian jalankan `limit.sh` agar dapat menjalankan Tybur (DHCP Server)
+
+```bash
+bash limit.sh
+```
+
+- lalu tes telnet pada client `Erwin` dan `Zeke` , akan tetapi sebelumnya node kedua client tersebut dapat dimatikan, lalu di nyalakan kembali.
