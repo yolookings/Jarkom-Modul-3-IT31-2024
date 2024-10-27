@@ -18,6 +18,8 @@
 - [Soal 4](#soal-4)
 - [Soal 5](#soal-5)
 - [Soal 6](#soal-6)
+- [Soal 7](#soal-7)
+- [Soal 8](#soal-8)
 
 ## Topology
 
@@ -571,3 +573,142 @@ lynx http://eldia.it31.com
 ```
 
 ![alt text](/img/lynx-zeke.png)
+
+## Soal 7
+
+Dikarenakan Armin sudah mendapatkan kekuatan titan colossal, maka bantulah kaum eldia menggunakan colossal agar dapat bekerja sama dengan baik. Kemudian lakukan testing dengan 6000 request dan 200 request/second.
+
+- pada Fritz (DNS Server) kita dapat mengkonfigurasi untuk menuju ke Colossal (Load Balancer PHP), dengan membuat script `config-lb` dan jalankan script tersebut
+
+```sh
+echo 'zone "marley.it31.com" {
+        type master;
+        file "/etc/bind/jarkom/marley.it31.com";
+};
+
+zone "eldia.it31.com" {
+        type master;
+        file "/etc/bind/jarkom/eldia.it31.com";
+};' > /etc/bind/named.conf.local
+
+mkdir /etc/bind/jarkom
+
+echo ';
+; BIND data file for local loopback interface
+;
+$TTL    604800
+@       IN      SOA     marley.it31.com. root.marley.it31.com. (
+                        2024051601      ; Serial
+                        604800          ; Refresh
+                        86400           ; Retry
+                        2419200         ; Expire
+                        604800 )        ; Negative Cache TTL
+;
+@               IN      NS      marley.it31.com.
+@               IN      A       192.232.3.3 ; IP Colossal' > /etc/bind/jarkom/marley.it31.com
+
+echo ';
+; BIND data file for local loopback interface
+;
+$TTL    604800
+@       IN      SOA     eldia.it31.com.  eldia.it31.com.  (
+                        2024051601      ; Serial
+                        604800          ; Refresh
+                        86400           ; Retry
+                        2419200         ; Expire
+                        604800 )        ; Negative Cache TTL
+;
+@               IN      NS      eldia.it03.com.
+@               IN      A       192.232.3.3 ; IP Colossal' > /etc/bind/jarkom/eldia.it31.com
+
+echo 'options {
+        directory "/var/cache/bind";
+
+        forwarders {
+                192.168.122.1;
+        };
+
+        // dnssec-validation auto;
+        allow-query{any;};
+        auth-nxdomain no;    # conform to RFC1035
+        listen-on-v6 { any; };
+}; ' >/etc/bind/named.conf.options
+
+service bind9 restart
+```
+
+- kemudian beralih ke Colossal, kita dapat membuat configurasi menggunakan script `colossal.sh` untuk mengatur load-balancernya
+
+```sh
+echo nameserver 192.168.122.1 > /etc/resolv.conf
+
+apt-get update
+apt-get install apache2-utils php7.0 php-fpm -y
+apt-get install nginx -y
+apt-get install lynx -y
+```
+
+- lalu untuk konfigurasi di load balencer nya menggunakan script `config-colossal.sh`
+
+```sh
+cp /etc/nginx/sites-available/default /etc/nginx/sites-available/lb_php
+
+echo '
+upstream worker {
+    server 192.232.2;
+    server 192.232.3;
+    server 192.232.4;
+}
+
+server {
+    listen 80;
+    server_name eldia.it31.com www.eldia.it31.com;
+
+    root /var/www/html;
+
+    index index.html index.htm index.nginx-debian.html;
+
+    location / {
+        proxy_pass http://worker;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+' > /etc/nginx/sites-available/lb_php
+
+ln -sf /etc/nginx/sites-available/lb_php /etc/nginx/sites-enabled/
+
+if [ -f /etc/nginx/sites-enabled/default ]; then
+    rm /etc/nginx/sites-enabled/default
+fi
+
+service nginx restart
+```
+
+- lalu kita coba di client `Erwin` sebelumnya dengan memasuki script `erwin-lb.sh` berikut :
+
+```sh
+apt update
+apt install lynx -y
+apt install htop -y
+apt install apache2-utils -y
+apt-get install jq -y
+```
+
+```sh
+bash erwin-lb.sh
+```
+
+- kemudian kita lakukan `apache bencmark` pada client `Erwin`
+
+```sh
+ab -n 6000 -c 200 http://eldia.it31.com/
+```
+
+![alt text](/img/ab-lb.png)
+
+![alt text](/img/ab-lb-req.png)
+
+## Soal 8
