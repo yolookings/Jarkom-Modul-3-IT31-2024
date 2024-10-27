@@ -733,7 +733,7 @@ upstream worker {
 }
 ```
 
-![alt text](image.png)
+![alt text](/img/rr.png)
 
 2. Weighted Round Robin
 
@@ -745,7 +745,7 @@ upstream worker {
 }
 ```
 
-![alt text](image-1.png)
+![alt text](/img/w-rr.png)
 
 3.  Least Connections
 
@@ -758,7 +758,7 @@ upstream worker {
 }
 ```
 
-![alt text](image-2.png)
+![alt text](/img/lc.png)
 
 4. Weighted Least Connections
 
@@ -771,7 +771,7 @@ upstream worker {
 }
 ```
 
-![alt text](image-3.png)
+![alt text](/img/w-lc.png)
 
 5. IP Hash
 
@@ -784,7 +784,7 @@ upstream worker {
 }
 ```
 
-![alt text](image-4.png)
+![alt text](/img/ip-hash.png)
 
 ## Soal 9
 
@@ -805,7 +805,7 @@ upstream worker {
   }
 ```
 
-![alt text](image-5.png)
+![alt text](/img/1-worker.png)
 
 2 Worker
 
@@ -817,7 +817,7 @@ upstream worker {
   }
 ```
 
-![alt text](image-6.png)
+![alt text](/img/2-worker.png)
 
 3 Worker
 
@@ -830,7 +830,7 @@ upstream worker {
   }
 ```
 
-![alt text](image-7.png)
+![alt text](/img/3-worker.png)
 
 ## Soal 10
 
@@ -1056,7 +1056,7 @@ Jalankan dengan :
 lynx 192.168.3.3/titan
 ```
 
-![alt text](/img/image-11.png)
+![alt text](/img/11.png)
 
 ## Soal 12
 
@@ -1187,9 +1187,9 @@ service php7.0-fpm restart
 echo "Konfigurasi selesai. Load balancer dengan autentikasi telah diatur."
 ```
 
-cek hwaddress ether 22:57:51:c6:dc:a6 di node zeke dan 32:19:e1:f4:cd:39 di node erwin
+cek `hwaddress ether 22:57:51:c6:dc:a6` di node zeke dan `hwaddress ether 32:19:e1:f4:cd:39` di node erwin
 
-![alt text](/img/image-13.png)
+![alt text](/img/12-ip-a.png)
 config pada tybur (zeke saja buat test)
 
 ```
@@ -1207,6 +1207,6 @@ service isc-dhcp-server restart
 ```
 
 jalankan script, kemudian tes `192.232.3.3.` di collosal
-![alt text](/img/image-12.png)
+![alt text](/img/12.png)
 
 dan
