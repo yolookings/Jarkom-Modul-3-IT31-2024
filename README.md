@@ -712,3 +712,239 @@ ab -n 6000 -c 200 http://eldia.it31.com/
 ![alt text](/img/ab-lb-req.png)
 
 ## Soal 8
+
+Karena Erwin meminta “laporan kerja Armin”, maka dari itu buatlah analisis hasil testing dengan 1000 request dan 75 request/second untuk masing-masing algoritma Load Balancer dengan ketentuan sebagai berikut:
+
+1. Nama Algoritma Load Balancer
+2. Report hasil testing pada Apache Benchmark
+3. Grafik request per second untuk masing masing algoritma.
+4. Analisis
+
+Jalankan Testing Dengan
+`ab -n 1000 -c 75 http://192.232.3.3/`
+
+1. Round Robin
+
+```c
+upstream worker {
+	server 192.232.2.2; # IP Armin
+	server 192.232.2.3; # IP Eren
+	server 192.232.2.4; # IP Mikasa
+}
+```
+
+![alt text](image.png)
+
+2. Weighted Round Robin
+
+```c
+upstream worker {
+	server 192.232.2.2 weight=3;
+	server 192.232.2.3 weight=2;
+	server 192.232.2.4 weight=1;
+}
+```
+
+![alt text](image-1.png)
+
+3.  Least Connections
+
+```c
+upstream worker {
+  least_conn;
+	server 192.232.2.2; # IP Armin
+	server 192.232.2.3; # IP Eren
+	server 192.232.2.4; # IP Mikasa
+}
+```
+
+![alt text](image-2.png)
+
+4. Weighted Least Connections
+
+```c
+upstream worker {
+  least_conn;
+	server 192.232.2.2 weight=3; # IP Armin
+	server 192.232.2.3 weight=2; # IP Eren
+	server 192.232.2.4 weight=1; # IP Mikasa
+}
+```
+
+![alt text](image-3.png)
+
+5. IP Hash
+
+```c
+upstream worker {
+  ip_hash;
+	server 192.232.2.2; # IP Armin
+	server 192.232.2.3; # IP Eren
+	server 192.232.2.4; # IP Mikasa
+}
+```
+
+![alt text](image-4.png)
+
+## Soal 9
+
+Dengan menggunakan algoritma Least-Connection, lakukan testing dengan menggunakan 3 worker, 2 worker, dan 1 worker sebanyak 1000 request dengan 10 request/second, kemudian tambahkan grafiknya pada “laporan kerja Armin”.
+
+Testing gunakan command
+
+```
+ab -n 1000 -c 75 http://192.232.3.3/
+```
+
+1 Worker
+
+```
+upstream worker {
+    least_conn;
+	  server 192.232.2.2;
+  }
+```
+
+![alt text](image-5.png)
+
+2 Worker
+
+```
+upstream worker {
+    least_conn;
+	  server 192.232.2.2;
+    server 192.232.2.3;
+  }
+```
+
+![alt text](image-6.png)
+
+3 Worker
+
+```
+upstream worker {
+    least_conn;
+	  server 192.232.2.2;
+    server 192.232.2.3;
+    server 192.232.2.4;
+  }
+```
+
+![alt text](image-7.png)
+
+## Soal 10
+
+Selanjutnya coba tambahkan keamanan dengan konfigurasi autentikasi di **Colossal** dengan dengan kombinasi username: “arminannie” dan password: “jrkmyyy”, dengan yyy merupakan kode kelompok. Terakhir simpan file “htpasswd” nya di /etc/nginx/supersecret/
+
+**Di Colossal (Load Balancer):**
+
+Bikin Folder supersecret
+
+```
+mkdir -p /etc/nginx/supersecret
+```
+
+Buat file `htpasswd` dengan username dan password yang telah ditentukan.
+
+```
+htpasswd -cb /etc/nginx/supersecret/htpasswd arminannie jrkmit31
+```
+
+Menjalankan service dari php-fpm dan nginx.
+
+```
+service php7.3-fpm start
+service nginx start
+```
+
+Edit konfigurasi server pada file /etc/nginx/sites-available/load-balancer-it31.conf menjadi seperti berikut:
+
+```
+server {
+	listen 80;
+
+	root /var/www/html;
+
+	index index.html index.htm index.nginx-debian.html;
+
+	server_name _;
+
+	location / {
+				auth_basic "Restricted Content";
+        auth_basic_user_file /etc/nginx/supersecret/htpasswd;
+        proxy_pass http://worker;
+	}
+}
+```
+
+Kemudian Restart nginx dan php-fpm.
+
+```
+service nginx restart
+service php7.0-fpm restart
+```
+
+script `lb_passwd`:
+
+```
+#!/bin/bash
+
+# Membuat folder supersecret
+echo "Membuat folder /etc/nginx/supersecret..."
+mkdir -p /etc/nginx/supersecret
+
+# Membuat file htpasswd dengan username dan password
+echo "Menambahkan user 'arminannie' dengan password ke htpasswd..."
+htpasswd -cb /etc/nginx/supersecret/htpasswd arminannie jrkmit31
+
+# Menjalankan service php-fpm dan nginx
+echo "Menjalankan php7.0-fpm dan nginx..."
+service php7.0-fpm start
+service nginx start
+
+# Menambahkan konfigurasi autentikasi pada file load balancer
+NGINX_CONF="/etc/nginx/sites-available/lb_php.conf"
+echo "Mengedit konfigurasi server pada $NGINX_CONF..."
+
+cat <<EOL > $NGINX_CONF
+upstream worker {
+	server 192.232.2.2; # IP Armin
+	server 192.232.2.3; # IP Eren
+	server 192.232.2.4; # IP Mikasa
+}
+
+server {
+	listen 80;
+
+	root /var/www/html;
+
+	index index.html index.htm index.nginx-debian.html;
+
+	server_name _;
+
+	location / {
+		auth_basic "Restricted Content";
+		auth_basic_user_file /etc/nginx/supersecret/htpasswd;
+		proxy_pass http://worker;
+		proxy_http_version 1.1;
+		proxy_set_header Upgrade \$http_upgrade;
+		proxy_set_header Connection 'upgrade';
+		proxy_set_header Host \$host;
+		proxy_cache_bypass \$http_upgrade;
+	}
+}
+EOL
+
+# Restart nginx dan php-fpm
+echo "Me-restart nginx dan php7.3-fpm..."
+service nginx restart
+service php7.0-fpm restart
+
+echo "Konfigurasi selesai. Load balancer dengan autentikasi telah diatur."
+```
+
+jalankan dengan
+
+```
+lynx 192.232.3.3
+```
