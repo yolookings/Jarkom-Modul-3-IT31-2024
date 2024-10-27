@@ -224,6 +224,15 @@ up echo nameserver 192.168.122.1 >> /etc/resolv.conf
 
 ## Installation
 
+- Paradis (DHCP Relay)
+
+```sh
+apt-get update
+apt-get install isc-dhcp-relay -y
+```
+
+- Tybur (DHCP Server)
+
 ```bash
 echo nameserver 192.168.122.1 > /etc/resolv.conf
 apt-get update
@@ -233,7 +242,15 @@ dhcpd --version
 echo INTERFACES="eth0" > /etc/default/isc-dhcp-serverm
 ```
 
--
+- Warhammer (Database)
+
+```sh
+echo nameserver 192.168.122.1 > /etc/resolv.conf
+
+apt-get update
+apt-get install mariadb-server -y
+service mysql start
+```
 
 ## Soal 1
 
@@ -517,7 +534,7 @@ apt-get install php php-fpm -y
 apt-get install wget -y
 apt-get install unzip -y
 service nginx start
-service php7.3-fpm start
+service php7.0-fpm start
 
 wget -O '/var/www/eldia.it31.com' 'https://drive.google.com/uc?export=download&id=1ufulgiWyTbOXQcow11JkXG7safgLq1y-'
 unzip -o /var/www/eldia.it31.com -d /var/www/
@@ -1267,8 +1284,13 @@ USE DATABASES;
 ```
 
 - Annie
+
   ![alt text](/img/annie-testing.png)
+
 - Berthold
+
   ![alt text](/img/ber-testing.png)
+
 - Reiner
+
   ![alt text](/img/rein-testing.png)
