@@ -20,6 +20,11 @@
 - [Soal 6](#soal-6)
 - [Soal 7](#soal-7)
 - [Soal 8](#soal-8)
+- [Soal 9](#soal-9)
+- [Soal 10](#soal-10)
+- [Soal 11](#soal-11)
+- [Soal 12](#soal-12)
+- [Soal 13](#soal-13)
 
 ## Topology
 
@@ -299,9 +304,9 @@ service bind9 restart
 
 - lalu setelahnya kita dapat melakukan `ping marley.it31.com` pada client `Zeke` dan `ping eldia.it31.com` pada client `Erwin` :
 
-![alt text](image.png)
+![alt text](/img/zeke-ping.png)
 
-![alt text](image-1.png)
+![alt text](/img/erwin-ping.png)
 
 ## Soal 2
 
@@ -725,7 +730,7 @@ Jalankan Testing Dengan
 
 1. Round Robin
 
-```c
+```sh
 upstream worker {
 	server 192.232.2.2; # IP Armin
 	server 192.232.2.3; # IP Eren
@@ -737,7 +742,7 @@ upstream worker {
 
 2. Weighted Round Robin
 
-```c
+```sh
 upstream worker {
 	server 192.232.2.2 weight=3;
 	server 192.232.2.3 weight=2;
@@ -749,7 +754,7 @@ upstream worker {
 
 3.  Least Connections
 
-```c
+```sh
 upstream worker {
   least_conn;
 	server 192.232.2.2; # IP Armin
@@ -762,7 +767,7 @@ upstream worker {
 
 4. Weighted Least Connections
 
-```c
+```sh
 upstream worker {
   least_conn;
 	server 192.232.2.2 weight=3; # IP Armin
@@ -775,7 +780,7 @@ upstream worker {
 
 5. IP Hash
 
-```c
+```sh
 upstream worker {
   ip_hash;
 	server 192.232.2.2; # IP Armin
@@ -792,13 +797,13 @@ Dengan menggunakan algoritma Least-Connection, lakukan testing dengan menggunaka
 
 Testing gunakan command
 
-```
+```sh
 ab -n 1000 -c 75 http://192.232.3.3/
 ```
 
 1 Worker
 
-```
+```sh
 upstream worker {
     least_conn;
 	  server 192.232.2.2;
@@ -809,7 +814,7 @@ upstream worker {
 
 2 Worker
 
-```
+```sh
 upstream worker {
     least_conn;
 	  server 192.232.2.2;
@@ -821,7 +826,7 @@ upstream worker {
 
 3 Worker
 
-```
+```sh
 upstream worker {
     least_conn;
 	  server 192.232.2.2;
@@ -840,26 +845,26 @@ Selanjutnya coba tambahkan keamanan dengan konfigurasi autentikasi di **Colossal
 
 Bikin Folder supersecret
 
-```
+```sh
 mkdir -p /etc/nginx/supersecret
 ```
 
 Buat file `htpasswd` dengan username dan password yang telah ditentukan.
 
-```
+```sh
 htpasswd -cb /etc/nginx/supersecret/htpasswd arminannie jrkmit31
 ```
 
 Menjalankan service dari php-fpm dan nginx.
 
-```
+```sh
 service php7.3-fpm start
 service nginx start
 ```
 
 Edit konfigurasi server pada file /etc/nginx/sites-available/load-balancer-it31.conf menjadi seperti berikut:
 
-```
+```sh
 server {
 	listen 80;
 
@@ -879,14 +884,14 @@ server {
 
 Kemudian Restart nginx dan php-fpm.
 
-```
+```sh
 service nginx restart
 service php7.0-fpm restart
 ```
 
 script `lb_passwd`:
 
-```
+```sh
 #!/bin/bash
 
 # Membuat folder supersecret
@@ -957,7 +962,7 @@ Lalu buat untuk setiap request yang mengandung /titan akan di proxy passing menu
 
 Edit konfigurasi `server` pada file `/etc/nginx/sites-available/lb_php` menjadi seperti berikut:
 
-```
+```sh
 upstream worker {
 	server 192.232.2.2; # IP Armin
 	server 192.232.2.3; # IP Eren
@@ -1000,7 +1005,7 @@ service php7.0-fpm restart
 
 Script `lb11.sh` :
 
-```
+```sh
 #!/bin/bash
 
 # Menambahkan konfigurasi autentikasi pada file load balancer
@@ -1066,7 +1071,7 @@ Selanjutnya Colossal ini hanya boleh diakses oleh client dengan IP [Prefix IP].1
 
 Edit konfigurasi `server` pada file `/etc/nginx/sites-available/lb_php` menjadi seperti berikut:
 
-```
+```sh
 
 upstream worker {
 	server 192.232.2.2; # IP Armin
@@ -1107,14 +1112,14 @@ server {
 }
 ```
 
-```
+```sh
 ln -s /etc/nginx/sites-available/lb_php /etc/nginx/sites-enabled/
 rm /etc/nginx/sites-enabled/default
 ```
 
 config pada tybur (zeke saja buat test)
 
-```
+```sh
 echo 'host Zeke{
         hardware ethernet fa:61:fb:1a:8d:5b;
         fixed-address 192.246.1.77;
@@ -1126,7 +1131,7 @@ service isc-dhcp-server restart
 
 script `lb12.sh`:
 
-```
+```sh
 #!/bin/bash
 
 # Menambahkan konfigurasi autentikasi pada file load balancer
@@ -1192,7 +1197,7 @@ cek `hwaddress ether 22:57:51:c6:dc:a6` di node zeke dan `hwaddress ether 32:19:
 ![alt text](/img/12-ip-a.png)
 config pada tybur (zeke saja buat test)
 
-```
+```sh
 echo 'host Zeke{
         hardware ethernet 22:57:51:c6:dc:a6;
         fixed-address 192.232.1.77;
@@ -1206,7 +1211,64 @@ host Erwin {
 service isc-dhcp-server restart
 ```
 
-jalankan script, kemudian tes `192.232.3.3.` di collosal
+jalankan script, kemudian tes `192.232.3.3` di collosal untuk mengetes forbiddennya
 ![alt text](/img/12.png)
 
-dan
+## Soal 13
+
+Melihat perlawanan yang sengit dari kaum eldia, kaum marley pun memutar otak dan mengatur para worker di marley.
+Karena mengetahui bahwa ada keturunan marley yang mewarisi kekuatan titan, Zeke pun berinisiatif untuk menyimpan data data penting di Warhammer, dan semua data tersebut harus dapat diakses oleh anak buah kesayangannya, Annie, Reiner, dan Berthold.
+
+- agar lebih mudah kita dapat membuat script untuk `database server` pada `Warhammer` dengan nama `sql.sh`
+
+```sh
+mysql -e "CREATE USER 'kelompokit31'@'%' IDENTIFIED BY 'passwordit31';"
+mysql -e "CREATE USER 'kelompokit31'@'marley.it31.com' IDENTIFIED BY 'passwordit31';"
+mysql -e "CREATE DATABASE dbkelompokit31;"
+mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'kelompokit31'@'%';"
+mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'kelompokit31'@'marley.it31.com';"
+mysql -e "FLUSH PRIVILEGES;"
+
+mysql="[mysqld]
+skip-networking=0
+skip-bind-address
+"
+echo "$mysql" > /etc/mysql/my.cnf
+
+service mysql restart
+```
+
+- setelah itu jalankan `sql.sh`
+
+```sh
+bash sql.sh
+```
+
+- lalu kita cek database tersebut pada `Annie, Bertholdt, Reiner` sebagai worker laravel nya, untuk itu buat script untuk para worker bernama `laravel-worker.sh`
+
+```sh
+echo nameserver 192.168.122.1 > /etc/resolv.conf
+
+apt-get update
+apt-get install mariadb-client -y
+service mysql start
+```
+
+- setelah itu, maka kita dapat untuk menjalankan command untuk masuk ke databasenya untuk melakukan test pada ketiga `worker laravel` tersebut:
+
+```sh
+mysql --host=192.232.3.4 --port=3306 --user=kelompokit31 --password=passwordit31
+```
+
+- dan saat sudah masuk ke database, kita dapat melihatnya menggunakan command untuk masing masing worker:
+
+```sh
+USE DATABASES;
+```
+
+- Annie
+  ![alt text](/img/annie-testing.png)
+- Berthold
+  ![alt text](/img/ber-testing.png)
+- Reiner
+  ![alt text](/img/rein-testing.png)
