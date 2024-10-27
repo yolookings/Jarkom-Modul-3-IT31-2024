@@ -948,3 +948,265 @@ jalankan dengan
 ```
 lynx 192.232.3.3
 ```
+
+## Soal 11
+
+Lalu buat untuk setiap request yang mengandung /titan akan di proxy passing menuju halaman `https://attackontitan.fandom.com/wiki/Attack_on_Titan_Wiki `
+
+**Di Colossal (Load Balancer):**
+
+Edit konfigurasi `server` pada file `/etc/nginx/sites-available/lb_php` menjadi seperti berikut:
+
+```
+upstream worker {
+	server 192.232.2.2; # IP Armin
+	server 192.232.2.3; # IP Eren
+	server 192.232.2.4; # IP Mikasa
+}
+
+server {
+	listen 80;
+
+	root /var/www/html;
+
+	index index.html index.htm index.nginx-debian.html;
+
+	server_name _;
+
+	location / {
+		auth_basic "Restricted Content";
+		auth_basic_user_file /etc/nginx/supersecret/htpasswd;
+		proxy_pass http://worker;
+	}
+
+	location /titan {
+		auth_basic "Restricted Content";
+		auth_basic_user_file /etc/nginx/supersecret/htpasswd;
+		proxy_pass https://attackontitan.fandom.com/wiki/Attack_on_Titan_Wiki;
+		proxy_set_header X-Real-IP \$remote_addr;
+		proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+		proxy_set_header X-Forwarded-Proto \$scheme;
+	}
+
+}
+```
+
+Restart service nginx dan php-fpm.
+
+```
+service nginx restart
+service php7.0-fpm restart
+```
+
+Script `lb11.sh` :
+
+```
+#!/bin/bash
+
+# Menambahkan konfigurasi autentikasi pada file load balancer
+NGINX_CONF="/etc/nginx/sites-available/lb_php"
+echo "Mengedit konfigurasi server pada $NGINX_CONF..."
+
+cat <<EOL > $NGINX_CONF
+upstream worker {
+	server 192.232.2.2; # IP Armin
+	server 192.232.2.3; # IP Eren
+	server 192.232.2.4; # IP Mikasa
+}
+
+server {
+	listen 80;
+
+	root /var/www/html;
+
+	index index.html index.htm index.nginx-debian.html;
+
+	server_name _;
+
+	location / {
+		auth_basic "Restricted Content";
+		auth_basic_user_file /etc/nginx/supersecret/htpasswd;
+		proxy_pass http://worker;
+	}
+
+	location /titan {
+		auth_basic "Restricted Content";
+		auth_basic_user_file /etc/nginx/supersecret/htpasswd;
+		proxy_pass https://attackontitan.fandom.com/wiki/Attack_on_Titan_Wiki;
+		proxy_set_header X-Real-IP \$remote_addr;
+		proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+		proxy_set_header X-Forwarded-Proto \$scheme;
+	}
+
+}
+
+EOL
+
+# Restart nginx dan php-fpm untuk menerapkan konfigurasi baru
+echo "Me-restart nginx dan php7.3-fpm..."
+service nginx restart
+service php7.0-fpm restart
+
+echo "Konfigurasi selesai. Load balancer dengan autentikasi telah diatur."
+```
+
+Jalankan dengan :
+
+```
+lynx 192.168.3.3/titan
+```
+
+![alt text](/img/image-11.png)
+
+## Soal 12
+
+Selanjutnya Colossal ini hanya boleh diakses oleh client dengan IP [Prefix IP].1.77, [Prefix IP].1.88, [Prefix IP].2.144, dan [Prefix IP].2.156.
+
+**Di Colossal (Load Balancer):**
+
+Edit konfigurasi `server` pada file `/etc/nginx/sites-available/lb_php` menjadi seperti berikut:
+
+```
+
+upstream worker {
+	server 192.232.2.2; # IP Armin
+	server 192.232.2.3; # IP Eren
+	server 192.232.2.4; # IP Mikasa
+}
+
+server {
+	listen 80;
+
+	root /var/www/html;
+
+	index index.html index.htm index.nginx-debian.html;
+
+	server_name _;
+
+	location / {
+		allow 192.232.1.77;
+		allow 192.232.1.88;
+		allow 192.232.2.144;
+		allow 192.232.2.156;
+		deny all;
+
+		auth_basic "Restricted Content";
+		auth_basic_user_file /etc/nginx/supersecret/htpasswd;
+		proxy_pass http://worker;
+	}
+
+	location /titan {
+		auth_basic "Restricted Content";
+		auth_basic_user_file /etc/nginx/supersecret/htpasswd;
+		proxy_pass https://attackontitan.fandom.com/wiki/Attack_on_Titan_Wiki;
+		proxy_set_header X-Real-IP \$remote_addr;
+		proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+		proxy_set_header X-Forwarded-Proto \$scheme;
+	}
+
+}
+```
+
+```
+ln -s /etc/nginx/sites-available/lb_php /etc/nginx/sites-enabled/
+rm /etc/nginx/sites-enabled/default
+```
+
+config pada tybur (zeke saja buat test)
+
+```
+echo 'host Zeke{
+        hardware ethernet fa:61:fb:1a:8d:5b;
+        fixed-address 192.246.1.77;
+}
+' >> /etc/dhcp/dhcpd.conf
+
+service isc-dhcp-server restart
+```
+
+script `lb12.sh`:
+
+```
+#!/bin/bash
+
+# Menambahkan konfigurasi autentikasi pada file load balancer
+NGINX_CONF="/etc/nginx/sites-available/lb_php"
+echo "Mengedit konfigurasi server pada $NGINX_CONF..."
+
+cat <<EOL > $NGINX_CONF
+
+upstream worker {
+	server 192.232.2.2; # IP Armin
+	server 192.232.2.3; # IP Eren
+	server 192.232.2.4; # IP Mikasa
+}
+
+server {
+	listen 80;
+  server_name eldia.it31.com www.eldia.it31.com;
+	root /var/www/html;
+
+	index index.html index.htm index.nginx-debian.html;
+
+	server_name _;
+
+	location / {
+		allow 192.232.1.77;
+		allow 192.232.1.88;
+		allow 192.232.2.144;
+		allow 192.232.2.156;
+		deny all;
+
+		auth_basic "Restricted Content";
+		auth_basic_user_file /etc/nginx/supersecret/htpasswd;
+		proxy_pass http://worker;
+	}
+
+	location /titan {
+		auth_basic "Restricted Content";
+		auth_basic_user_file /etc/nginx/supersecret/htpasswd;
+		proxy_pass https://attackontitan.fandom.com/wiki/Attack_on_Titan_Wiki;
+		proxy_set_header X-Real-IP \$remote_addr;
+		proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+		proxy_set_header X-Forwarded-Proto \$scheme;
+	}
+
+}
+
+
+EOL
+
+ln -s /etc/nginx/sites-available/lb_php /etc/nginx/sites-enabled/
+rm /etc/nginx/sites-enabled/default
+
+# Restart nginx dan php-fpm untuk menerapkan konfigurasi baru
+echo "Me-restart nginx dan php7.0-fpm..."
+service nginx restart
+service php7.0-fpm restart
+
+echo "Konfigurasi selesai. Load balancer dengan autentikasi telah diatur."
+```
+
+cek hwaddress ether 22:57:51:c6:dc:a6 di node zeke dan 32:19:e1:f4:cd:39 di node erwin
+
+![alt text](/img/image-13.png)
+config pada tybur (zeke saja buat test)
+
+```
+echo 'host Zeke{
+        hardware ethernet 22:57:51:c6:dc:a6;
+        fixed-address 192.232.1.77;
+}
+host Erwin {
+    hardware ethernet 32:19:e1:f4:cd:39;
+    fixed-address 192.232.2.144;
+}
+' >> /etc/dhcp/dhcpd.conf
+
+service isc-dhcp-server restart
+```
+
+jalankan script, kemudian tes `192.232.3.3.` di collosal
+![alt text](/img/image-12.png)
+
+dan
