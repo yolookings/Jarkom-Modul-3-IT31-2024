@@ -199,10 +199,7 @@ up echo nameserver 192.168.122.1 > /etc/resolv.conf
 
 ```bash
 auto eth0
-iface eth0 inet static
-  address 192.232.1.5
-  netmask 255.255.255.0
-  gateway 192.232.1.1
+iface eth0 inet dhcp
 
 up echo nameserver 192.232.4.3 > /etc/resolv.conf // IP DNS Server
 up echo nameserver 192.168.122.1 >> /etc/resolv.conf
@@ -211,12 +208,8 @@ up echo nameserver 192.168.122.1 >> /etc/resolv.conf
 
 - Erwin (Client)
 
-```bash
 auto eth0
-iface eth0 inet static
-  address 192.232.2.5
-  netmask 255.255.255.0
-  gateway 192.232.2.1
+iface eth0 inet dhcp
 
 up echo nameserver 192.232.4.3 > /etc/resolv.conf // ip DNS Server
 up echo nameserver 192.168.122.1 >> /etc/resolv.conf
