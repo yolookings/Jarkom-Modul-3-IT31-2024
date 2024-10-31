@@ -1,4 +1,4 @@
-# Jarkom-Modul-2-IT31-2024
+# Jarkom-Modul-3-IT31-2024
 
 ## Anggota Kelompok IT31 :
 
@@ -201,17 +201,16 @@ up echo nameserver 192.168.122.1 > /etc/resolv.conf
 auto eth0
 iface eth0 inet dhcp
 
-up echo nameserver 192.232.4.3 > /etc/resolv.conf // IP DNS Server
+up echo nameserver 192.232.4.3 > /etc/resolv.conf 
 up echo nameserver 192.168.122.1 >> /etc/resolv.conf
-
 ```
 
 - Erwin (Client)
-
+```bash
 auto eth0
 iface eth0 inet dhcp
 
-up echo nameserver 192.232.4.3 > /etc/resolv.conf // ip DNS Server
+up echo nameserver 192.232.4.3 > /etc/resolv.conf 
 up echo nameserver 192.168.122.1 >> /etc/resolv.conf
 ```
 
